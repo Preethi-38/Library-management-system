@@ -1,175 +1,7 @@
+import javax.swing.*;
+import java.awt.*;
 import java.util.*;
-
-public class Main {
-    private static Scanner sc = new Scanner(System.in);
-    private static Library lib = new Library();
-
-    public static void main(String[] args) {
-        lib.seedData();
-        System.out.println("===== Library Management System =====");
-
-        while (true) {
-            System.out.println("\nLogin as:");
-            System.out.println("1. Student");
-            System.out.println("2. Admin");
-            System.out.println("0. Exit");
-            System.out.print("Enter choice: ");
-
-            int role = readInt();
-            if (role == 0) {
-                System.out.println("Exiting program...");
-                break;
-            }
-
-            System.out.print("Enter ID: ");
-            String id = sc.nextLine().trim();
-            System.out.print("Enter Password: ");
-            String pass = sc.nextLine().trim();
-
-            if (role == 1) {
-                Student student = lib.loginStudent(id, pass);
-                if (student != null) {
-                    studentMenu(student);
-                } else {
-                    System.out.println("Invalid Student Credentials.");
-                }
-            } else if (role == 2) {
-                Admin admin = lib.loginAdmin(id, pass);
-                if (admin != null) {
-                    adminMenu(admin);
-                } else {
-                    System.out.println("Invalid Admin Credentials.");
-                }
-            } else {
-                System.out.println("Invalid choice. Try again.");
-            }
-        }
-        sc.close();
-    }
-
-    private static void studentMenu(Student student) {
-        while (true) {
-            System.out.println("\nStudent Menu:");
-            System.out.println("1. Search Book");
-            System.out.println("2. Borrow Book");
-            System.out.println("3. View Total Books");
-            System.out.println("4. Return Book");
-            System.out.println("5. Logout");
-            System.out.print("Choose option: ");
-
-            int choice = readInt();
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter book name or author to search: ");
-                    String query = sc.nextLine().trim();
-                    lib.searchBook(query);
-                    break;
-                case 2:
-                    System.out.print("Enter Book ID to borrow: ");
-                    String borrowId = sc.nextLine().trim();
-                    lib.borrowBook(borrowId, student.getId());
-                    break;
-                case 3:
-                    lib.viewTotalBooks();
-                    break;
-                case 4:
-                    System.out.print("Enter Book ID to return: ");
-                    String returnId = sc.nextLine().trim();
-                    lib.returnBook(returnId, student.getId());
-                    break;
-                case 5:
-                    System.out.println("Logging out...");
-                    return;
-                default:
-                    System.out.println("Invalid option, try again.");
-            }
-        }
-    }
-
-    private static void adminMenu(Admin admin) {
-        while (true) {
-            System.out.println("\nAdmin Menu:");
-            System.out.println("1. Add Book");
-            System.out.println("2. Update Book");
-            System.out.println("3. Delete Book");
-            System.out.println("4. View Student Info");
-            System.out.println("5. Assign Book to Student");
-            System.out.println("6. View Total Books");
-            System.out.println("7. Add Student");
-            System.out.println("8. Logout");
-            System.out.print("Choose option: ");
-
-            int choice = readInt();
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter Book ID: ");
-                    String newBookId = sc.nextLine().trim();
-                    System.out.print("Enter Book Name: ");
-                    String newBookName = sc.nextLine().trim();
-                    System.out.print("Enter Author Name: ");
-                    String newBookAuthor = sc.nextLine().trim();
-                    System.out.print("Enter Quantity: ");
-                    int qty = readInt();
-                    lib.addBook(new Book(newBookId, newBookName, newBookAuthor, qty));
-                    break;
-                case 2:
-                    System.out.print("Enter Book ID to update: ");
-                    String updateId = sc.nextLine().trim();
-                    lib.updateBook(updateId, sc);
-                    break;
-                case 3:
-                    System.out.print("Enter Book ID to delete: ");
-                    String deleteId = sc.nextLine().trim();
-                    lib.deleteBook(deleteId);
-                    break;
-                case 4:
-                    System.out.print("Enter Student ID: ");
-                    String studentId = sc.nextLine().trim();
-                    lib.viewStudentInfo(studentId);
-                    break;
-                case 5:
-                    System.out.print("Enter Student ID: ");
-                    String sid = sc.nextLine().trim();
-                    System.out.print("Enter Book ID: ");
-                    String bid = sc.nextLine().trim();
-                    lib.assignBook(sid, bid);
-                    break;
-                case 6:
-                    lib.viewTotalBooks();
-                    break;
-                case 7:
-                    System.out.print("Enter new Student ID: ");
-                    String newStudentId = sc.nextLine().trim();
-                    if (lib.studentExists(newStudentId)) {
-                        System.out.println("Student ID already exists.");
-                    } else {
-                        System.out.print("Enter password for new student: ");
-                        String newStudentPass = sc.nextLine().trim();
-                        lib.addStudent(new Student(newStudentId, newStudentPass));
-                        System.out.println("Student added successfully.");
-                    }
-                    break;
-                case 8:
-                    System.out.println("Logging out...");
-                    return;
-                default:
-                    System.out.println("Invalid option, try again.");
-            }
-        }
-    }
-
-    private static int readInt() {
-        while (true) {
-            try {
-                String input = sc.nextLine().trim();
-                return Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.print("Please enter a valid number: ");
-            }
-        }
-    }
-}
-
+// Abstract User
 abstract class User {
     protected String id;
     protected String password;
@@ -188,8 +20,12 @@ abstract class User {
     }
 }
 
+// =============================
+// Student Class
+// =============================
 class Student extends User {
     private List<String> borrowedBooks = new ArrayList<>();
+    public static final int MAX_BORROW = 3;
 
     public Student(String id, String password) {
         super(id, password);
@@ -210,16 +46,22 @@ class Student extends User {
     }
 
     public boolean hasBorrowLimitReached() {
-        return borrowedBooks.size() >= 3;
+        return borrowedBooks.size() >= MAX_BORROW;
     }
 }
 
+// =============================
+// Admin Class
+// =============================
 class Admin extends User {
     public Admin(String id, String password) {
         super(id, password);
     }
 }
 
+// =============================
+// Book Class
+// =============================
 class Book {
     private String id;
     private String name;
@@ -258,6 +100,9 @@ class Book {
     }
 }
 
+// =============================
+// Library Class
+// =============================
 class Library {
     private Map<String, Student> students = new HashMap<>();
     private Map<String, Admin> admins = new HashMap<>();
@@ -280,233 +125,242 @@ class Library {
         return (a != null && a.checkPassword(pass)) ? a : null;
     }
 
-    public void searchBook(String keyword) {
-        boolean found = false;
+    public String searchBook(String keyword) {
+        StringBuilder sb = new StringBuilder();
         for (Book b : books.values()) {
             if (b.getName().toLowerCase().contains(keyword.toLowerCase()) ||
                 b.getAuthor().toLowerCase().contains(keyword.toLowerCase())) {
-                System.out.println(b);
-                found = true;
+                sb.append(b).append("\n");
             }
         }
-        if (!found) System.out.println("No books found.");
+        return sb.length() == 0 ? "No books found." : sb.toString();
     }
 
-    public void borrowBook(String bookId, String studentId) {
+    public String borrowBook(String bookId, String studentId) {
         Student s = students.get(studentId);
         Book b = books.get(bookId);
-        if (s == null || b == null) {
-            System.out.println("Invalid student or book ID.");
-            return;
-        }
-        if (s.getBorrowedBooks().contains(bookId)) {
-            System.out.println("You already borrowed this book.");
-            return;
-        }
-        if (s.hasBorrowLimitReached()) {
-            System.out.println("Borrow limit reached. Return a book first.");
-            return;
-        }
-        if (!b.isAvailable()) {
-            System.out.println("Book not available currently.");
-            return;
-        }
+        if (s == null || b == null) return "Invalid student or book ID.";
+        if (s.getBorrowedBooks().contains(bookId)) return "You already borrowed this book.";
+        if (s.hasBorrowLimitReached()) return "Borrow limit reached.";
+        if (!b.isAvailable()) return "Book not available currently.";
+
         b.borrowCopy();
         s.borrowBook(bookId);
-        System.out.println("Book borrowed: " + b);
+        return "Book borrowed: " + b;
     }
 
-    public void returnBook(String bookId, String studentId) {
+    public String returnBook(String bookId, String studentId) {
         Student s = students.get(studentId);
         Book b = books.get(bookId);
-        if (s == null || b == null) {
-            System.out.println("Invalid student or book ID.");
-            return;
-        }
-        if (!s.getBorrowedBooks().contains(bookId)) {
-            System.out.println("You have not borrowed this book.");
-            return;
-        }
+        if (s == null || b == null) return "Invalid student or book ID.";
+        if (!s.getBorrowedBooks().contains(bookId)) return "You have not borrowed this book.";
+
         s.returnBook(bookId);
         b.returnCopy();
-        System.out.println("Book returned successfully.");
+        return "Book returned successfully.";
     }
 
-    public void addBook(Book book) {
+    public String addBook(Book book) {
         if (books.containsKey(book.getId())) {
-            System.out.println("Book ID already exists.");
-            return;
+            return "Book ID already exists.";
         }
         books.put(book.getId(), book);
-        System.out.println("Book added.");
+        return "Book added.";
     }
 
-    public void updateBook(String bookId, Scanner sc) {
-        Book b = books.get(bookId);
-        if (b == null) {
-            System.out.println("Book not found.");
-            return;
-        }
-        System.out.print("New name: ");
-        String newName = sc.nextLine().trim();
-        System.out.print("New author: ");
-        String newAuthor = sc.nextLine().trim();
-        b.setName(newName);
-        b.setAuthor(newAuthor);
-        System.out.println("Book updated.");
-    }
-
-    public void deleteBook(String bookId) {
+    public String deleteBook(String bookId) {
         Book removed = books.remove(bookId);
         if (removed != null) {
             for (Student s : students.values()) {
-                s.returnBook(bookId); // Clean up from all student records
+                s.returnBook(bookId);
             }
-            System.out.println("Book deleted.");
+            return "Book deleted.";
         } else {
-            System.out.println("Book not found.");
+            return "Book not found.";
         }
     }
 
-    public void viewStudentInfo(String studentId) {
-        Student s = students.get(studentId);
-        if (s == null) {
-            System.out.println("Student not found.");
-            return;
-        }
-        System.out.println("Student ID: " + s.getId());
-        List<String> borrowed = s.getBorrowedBooks();
-        if (borrowed.isEmpty()) {
-            System.out.println("No books borrowed.");
-        } else {
-            System.out.println("Borrowed books:");
-            for (String bookId : borrowed) {
-                Book b = books.get(bookId);
-                if (b != null) {
-                    System.out.println("- " + b);
-                } else {
-                    System.out.println("- Book ID " + bookId + " (not found)");
-                }
-            }
-        }
-    }
-
-    public void assignBook(String studentId, String bookId) {
-        Student s = students.get(studentId);
-        Book b = books.get(bookId);
-        if (s == null || b == null) {
-            System.out.println("Invalid student or book ID.");
-            return;
-        }
-        if (!b.isAvailable()) {
-            System.out.println("Book is not available.");
-            return;
-        }
-        if (s.getBorrowedBooks().contains(bookId)) {
-            System.out.println("Student already has this book.");
-            return;
-        }
-        if (s.hasBorrowLimitReached()) {
-            System.out.println("Student has reached the borrow limit.");
-            return;
-        }
-        s.borrowBook(bookId);
-        b.borrowCopy();
-        System.out.println("Book assigned to student.");
-    }
-
-    public void viewTotalBooks() {
-        System.out.println("Total books in library: " + books.size());
+    public String viewTotalBooks() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Total books in library: ").append(books.size()).append("\n");
         for (Book b : books.values()) {
-            System.out.println(b);
+            sb.append(b).append("\n");
         }
+        return sb.toString();
     }
 
     public void addStudent(Student student) {
         students.put(student.getId(), student);
     }
-
-    public boolean studentExists(String studentId) {
-        return students.containsKey(studentId);
-    }
 }
 
+// =============================
+// GUI Class
+// =============================
+public class LibraryGUI {
+    private Library library = new Library();
+    private JFrame frame;
+    private JTextField idField, passField;
+    private JComboBox<String> roleBox;
 
+    public LibraryGUI() {
+        library.seedData();
+        showLoginScreen();
+    }
 
----------------------------------------------------------------------------------
+    private void showLoginScreen() {
+        frame = new JFrame("Library Management System - Login");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 250);
+        frame.setLayout(new GridLayout(5, 2, 10, 10));
 
-OUTPUT:
-===== Library Management System =====
+        roleBox = new JComboBox<>(new String[]{"Student", "Admin"});
+        idField = new JTextField();
+        passField = new JPasswordField();
 
-Login as:
-1. Student
-2. Admin
-0. Exit
-Enter choice: > 2
-Enter ID: > a1
-Enter Password: > 2468
+        JButton loginBtn = new JButton("Login");
 
-Admin Menu:
-1. Add Book
-2. Update Book
-3. Delete Book
-4. View Student Info
-5. Assign Book to Student
-6. View Total Books
-7. Add Student
-8. Logout
-Choose option: > 6
+        frame.add(new JLabel("Role:"));
+        frame.add(roleBox);
+        frame.add(new JLabel("ID:"));
+        frame.add(idField);
+        frame.add(new JLabel("Password:"));
+        frame.add(passField);
+        frame.add(new JLabel(""));
+        frame.add(loginBtn);
 
-Total books in library: 2
-b1: Java Basics by John Doe (Available: 2)
-b2: Data Structures by Jane Roe (Available: 1)
+        loginBtn.addActionListener(e -> handleLogin());
 
-Choose option: > 7
-Enter new Student ID: > s2
-Enter password for new student: > 1111
-Student added successfully.
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
 
-Choose option: > 8
-Logging out...
+    private void handleLogin() {
+        String role = (String) roleBox.getSelectedItem();
+        String id = idField.getText().trim();
+        String pass = passField.getText().trim();
 
-Login as:
-1. Student
-2. Admin
-0. Exit
-Enter choice: > 1
-Enter ID: > s1
-Enter Password: > 1234
+        if ("Student".equals(role)) {
+            Student s = library.loginStudent(id, pass);
+            if (s != null) {
+                frame.dispose();
+                showStudentMenu(s);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Invalid Student credentials!");
+            }
+        } else {
+            Admin a = library.loginAdmin(id, pass);
+            if (a != null) {
+                frame.dispose();
+                showAdminMenu(a);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Invalid Admin credentials!");
+            }
+        }
+    }
 
-Student Menu:
-1. Search Book
-2. Borrow Book
-3. View Total Books
-4. Return Book
-5. Logout
-Choose option: > 1
-Enter book name or author to search: > java
-b1: Java Basics by John Doe (Available: 2)
+    private void showStudentMenu(Student s) {
+        JFrame studentFrame = new JFrame("Student Menu - " + s.getId());
+        studentFrame.setSize(400, 300);
+        studentFrame.setLayout(new GridLayout(6, 1, 10, 10));
 
-Choose option: > 2
-Enter Book ID to borrow: > b1
-Book borrowed: b1: Java Basics by John Doe (Available: 1)
+        JButton searchBtn = new JButton("Search Book");
+        JButton borrowBtn = new JButton("Borrow Book");
+        JButton returnBtn = new JButton("Return Book");
+        JButton viewBtn = new JButton("View Total Books");
+        JButton logoutBtn = new JButton("Logout");
 
-Choose option: > 3
-Total books in library: 2
-b1: Java Basics by John Doe (Available: 1)
-b2: Data Structures by Jane Roe (Available: 1)
+        studentFrame.add(searchBtn);
+        studentFrame.add(borrowBtn);
+        studentFrame.add(returnBtn);
+        studentFrame.add(viewBtn);
+        studentFrame.add(logoutBtn);
 
-Choose option: > 4
-Enter Book ID to return: > b1
-Book returned successfully.
+        searchBtn.addActionListener(e -> {
+            String keyword = JOptionPane.showInputDialog("Enter book name or author:");
+            if (keyword != null) {
+                JOptionPane.showMessageDialog(studentFrame, library.searchBook(keyword));
+            }
+        });
 
-Choose option: > 5
-Logging out...
+        borrowBtn.addActionListener(e -> {
+            String bookId = JOptionPane.showInputDialog("Enter Book ID to borrow:");
+            if (bookId != null) {
+                JOptionPane.showMessageDialog(studentFrame, library.borrowBook(bookId, s.getId()));
+            }
+        });
 
-Login as:
-1. Student
-2. Admin
-0. Exit
-Enter choice: > 0
-Exiting program...
+        returnBtn.addActionListener(e -> {
+            String bookId = JOptionPane.showInputDialog("Enter Book ID to return:");
+            if (bookId != null) {
+                JOptionPane.showMessageDialog(studentFrame, library.returnBook(bookId, s.getId()));
+            }
+        });
 
+        viewBtn.addActionListener(e -> 
+            JOptionPane.showMessageDialog(studentFrame, library.viewTotalBooks())
+        );
+
+        logoutBtn.addActionListener(e -> {
+            studentFrame.dispose();
+            showLoginScreen();
+        });
+
+        studentFrame.setLocationRelativeTo(null);
+        studentFrame.setVisible(true);
+    }
+
+    private void showAdminMenu(Admin a) {
+        JFrame adminFrame = new JFrame("Admin Menu - " + a.getId());
+        adminFrame.setSize(400, 350);
+        adminFrame.setLayout(new GridLayout(7, 1, 10, 10));
+
+        JButton addBookBtn = new JButton("Add Book");
+        JButton deleteBookBtn = new JButton("Delete Book");
+        JButton viewBooksBtn = new JButton("View Total Books");
+        JButton addStudentBtn = new JButton("Add Student");
+        JButton logoutBtn = new JButton("Logout");
+
+        adminFrame.add(addBookBtn);
+        adminFrame.add(deleteBookBtn);
+        adminFrame.add(viewBooksBtn);
+        adminFrame.add(addStudentBtn);
+        adminFrame.add(logoutBtn);
+
+        addBookBtn.addActionListener(e -> {
+            String id = JOptionPane.showInputDialog("Enter Book ID:");
+            String name = JOptionPane.showInputDialog("Enter Book Name:");
+            String author = JOptionPane.showInputDialog("Enter Author:");
+            int qty = Integer.parseInt(JOptionPane.showInputDialog("Enter Quantity:"));
+            JOptionPane.showMessageDialog(adminFrame, library.addBook(new Book(id, name, author, qty)));
+        });
+
+        deleteBookBtn.addActionListener(e -> {
+            String id = JOptionPane.showInputDialog("Enter Book ID to delete:");
+            if (id != null) JOptionPane.showMessageDialog(adminFrame, library.deleteBook(id));
+        });
+
+        viewBooksBtn.addActionListener(e -> 
+            JOptionPane.showMessageDialog(adminFrame, library.viewTotalBooks())
+        );
+
+        addStudentBtn.addActionListener(e -> {
+            String id = JOptionPane.showInputDialog("Enter Student ID:");
+            String pass = JOptionPane.showInputDialog("Enter Password:");
+            library.addStudent(new Student(id, pass));
+            JOptionPane.showMessageDialog(adminFrame, "Student added successfully.");
+        });
+
+        logoutBtn.addActionListener(e -> {
+            adminFrame.dispose();
+            showLoginScreen();
+        });
+
+        adminFrame.setLocationRelativeTo(null);
+        adminFrame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(LibraryGUI::new);
+    }
+}
